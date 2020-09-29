@@ -20,16 +20,18 @@ class WindowSetBPM: public QMainWindow
 
 public:
     ~WindowSetBPM(){}
-    WindowSetBPM(MainWindow *main_window);
-    
+    WindowSetBPM(MainWindow *main_window, int barPos, int gridPos);
+
     void Execute();
 private:
     void createActions();
+    MainWindow *mainWindow_;
+    int barPos_;
+    int gridPos_;
     QLabel *label_;
     QSlider *slider_;
     QPushButton *ok_button_;
     QPushButton *cancel_button_;
-    MainWindow *mainWindow_;
 private slots:
     void updateBPM(int);
     void updateBPM2(int);

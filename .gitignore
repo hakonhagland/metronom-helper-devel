@@ -1,6 +1,10 @@
+\#*#
+.#*
 .compile.sh
 .qmake.stash
 moc_*
 simple
 *.o
 Makefile
+unit_tests/run_tests
+my_test

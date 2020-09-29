@@ -19,8 +19,6 @@ class RenderArea : public QWidget
     Q_OBJECT
 
     // fraction of bar width
-    constexpr static double BAR_CIRCLE_MARGIN = 1.0/9;
-    // fraction of bar width
     constexpr static double BAR_CIRCLE_RADIUS_SIZE = 5.0/100;
 
 public:
@@ -39,10 +37,15 @@ protected:
     void paintEvent(QPaintEvent *event) override;
 
 private:
+    int calculateBarXmin(int pos);
+    void calculateMouseBarPos(int x, int *barNo, int *gridPos);
+    bool checkBarMouseY( int y );
     void drawBar(QPainter &painter, QPainterPath &path, int pos);
     void drawBarCircles(QPainter &painter, int xpos, int ypos, int barNum );
+    void drawGrid(QPainter &painter, int xpos, int ypos, int width, int height);
     void drawSingleBarCircleWithAnimation(
         QPainter &painter, int pos, int ypos, int radius, int barNum, int circleNum);
+    void drawBPMgraph(QPainter &painter);
     MainWindow *mainWindow_;
     bool playing_;
     int metroPos_;
@@ -52,6 +55,18 @@ private:
     int barCount_;
     int barTopOffset_;
     int barHeight_;
+    int gridResolution_;
+    int topBPMgraphMargin_;
+    int bpmGraphHeight_;
+
+    class BpmGraph {
+    public:
+        BpmGraph(RenderArea &renderArea, QPainter &painter);
+        void drawRectangle();
+    private:
+        RenderArea &renderArea_;
+        QPainter &painter_;
+    };
 };
 
 #endif // RENDERAREA_H

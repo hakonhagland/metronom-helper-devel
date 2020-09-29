@@ -52,7 +52,8 @@ public:
     TimeSignature& getTimeSignature() { return timeSignature_; };
     void setFloatVolume(float v);
     void setTimeSignature(int top, int bottom);
-    void updateBpm(int bpm);
+    void updateBpm(int bpm, int gridPos, int barPos);
+    void openBpmDialog(int barPos, int gridPos);
 private:
     void createActions();
     void createMenus();
@@ -82,7 +83,6 @@ private:
     TimeSignature timeSignature_;
     int currentBpm_;
 
-
 private slots:
     void save();
     void addBar();
@@ -91,8 +91,8 @@ private slots:
     void play();
     void stop();
     void openTimeSignatureDialog();
-    void setBPM();
     void timerEvent();
+    void setBPM();
     void beatCircleTimerEvent();
 };
 

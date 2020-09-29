@@ -55,6 +55,7 @@ void MainWindow::createMenus()
 void MainWindow::createActions()
 {
     quitAct = new QAction(tr("&Quit"), this);
+    quitAct->setShortcut(QKeySequence(tr("Ctrl+Q")));
     connect(quitAct, &QAction::triggered, this, &MainWindow::quit);
     saveAct = new QAction(tr("&Save"), this);
     connect(saveAct, &QAction::triggered, this, &MainWindow::save);
@@ -92,10 +93,11 @@ void MainWindow::save() {
     QApplication::quit();
 }
 
-void MainWindow::updateBpm(int bpm)
+void MainWindow::updateBpm(int bpm, int gridPos, int barPos)
 {
     double delay = convertBpmToMilliSec_(bpm);
     currentBpm_ = bpm;
+    
     getTimer()->setInterval((int) delay);
 }
 
@@ -171,12 +173,17 @@ void MainWindow::setVolume()
     volumeDialog_->Execute();
 }
 
-void MainWindow::setBPM() {
-    bpmDialog_ = new WindowSetBPM(this);
+void MainWindow::openBpmDialog(int barPos, int gridPos) {
+    bpmDialog_ = new WindowSetBPM {this, barPos, gridPos};
     positionWindow_(bpmDialog_, 400, 200);
     bpmDialog_->setWindowTitle("Select a value for BPM");
     bpmDialog_->Execute();
+}
 
+void MainWindow::setBPM() {
+    int barPos = 1;
+    int gridPos = 1;
+    openBpmDialog(barPos, gridPos);
 }
 
 void MainWindow::openTimeSignatureDialog() {

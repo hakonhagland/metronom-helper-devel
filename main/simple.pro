@@ -20,6 +20,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 SOURCES += main.cpp ../src/MainWindow.cpp ../src/RenderArea.cpp
 SOURCES += ../src/WindowSetTimeSig.cpp ../src/WindowSetVolume.cpp
 SOURCES += ../src/WindowSetBPM.cpp ../src/BeatCircleTimer.cpp
+SOURCES += ../src/BpmGraph.cpp
 
 HEADERS += ../include/MainWindow.hpp ../include/RenderArea.hpp
 HEADERS += ../include/WindowSetTimeSig.hpp ../include/WindowSetVolume.hpp

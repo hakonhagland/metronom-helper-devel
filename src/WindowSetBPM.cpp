@@ -2,8 +2,9 @@
 #include "WindowSetBPM.hpp"
 #include <QString>
 
-WindowSetBPM::WindowSetBPM(MainWindow *main_window) {
-    mainWindow_ = main_window;
+WindowSetBPM::WindowSetBPM(MainWindow *main_window, int barPos, int gridPos) :
+    mainWindow_(main_window), barPos_(barPos), gridPos_(gridPos)
+{
     QWidget *widget = new QWidget(this);
     setCentralWidget(widget);
     QGridLayout *layout = new QGridLayout(widget);
@@ -45,7 +46,8 @@ void WindowSetBPM::updateBPM2(int value) {
 void WindowSetBPM::updateBPM(int value) {
     QString txt = QString::number(value);
     label_->setText(txt);
-    mainWindow_->updateBpm(value);
+    mainWindow_->updateBpm(value, gridPos_, barPos_);
+    // CONTINUE HERE!!
 
 };
 

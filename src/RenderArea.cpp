@@ -7,50 +7,41 @@
 
 #include "MainWindow.hpp"
 
-RenderArea::RenderArea(MainWindow *mainWindow)
-    : QWidget(mainWindow),
-      mainWindow_(mainWindow),
-      playing_{false},
-      metroPos_{0},
-      barLeftMargin_{10},
-      barWidth_{120},
-      barHorizontalSpacing_{10},
-      barCount_{0},
-      barTopOffset_{10},
-      barHeight_{75}
+void RenderArea::addBar()
 {
-
+    barCount_ += 1;
 }
 
-void RenderArea::mousePressEvent(QMouseEvent *event)
-{
-    if (event->button() == Qt::LeftButton) {
-        QPoint lastPoint = event->pos();
-        qInfo() << "point = " << lastPoint;
+
+void RenderArea::calculateMouseBarPos(int x, int *barNo, int *gridPos) {
+    int maxBarNo = barCount_;
+    int minBarNo = 1;
+    int xmin = calculateBarXmin(minBarNo-1);
+    int xmax = calculateBarXmin(maxBarNo-1)+ barWidth_;
+    if (x >= xmin && x <= xmax) {
+        *barNo = ((int) (x - xmin) / barWidth_) + 1;
+        int x2 = (x - xmin) % barWidth_;
+        int numCircles = mainWindow_->getTimeSignature().getTop();
+        int numGridPos = numCircles*gridResolution_;
+        int gridCellWidth =  barWidth_ / numGridPos;
+        *gridPos = (x2 / gridCellWidth) + 1;
     }
+    else {
+        *barNo = 0;
+    }
+    return;
 }
 
-QSize RenderArea::minimumSizeHint() const
+bool RenderArea::checkBarMouseY(int y) {
+    int y1 = barTopOffset_;
+    int y2 = y1 + barHeight_;
+    return y >= y1 && y <= y2;
+}
+
+int RenderArea::calculateBarXmin(int pos)
 {
-    return QSize(100, 100);
+    return pos*(barWidth_ + barHorizontalSpacing_) + barLeftMargin_;
 }
-
-QSize RenderArea::sizeHint() const
-{
-    return QSize(400, 200);
-}
-
-// horizontal position of current beat circle
-void RenderArea::updateMetroPos()
-{
-    metroPos_ += 1;
-}
-
-void RenderArea::setPlaying(bool value)
-{
-    playing_ = value;
-}
-
 
 // INPUT:
 //  - pos = current bar number (0, 1, 2, ...)
@@ -59,15 +50,49 @@ void RenderArea::drawBar(QPainter &painter, QPainterPath &path, int pos)
     QColor BLACK_COLOR{0, 0, 0};
     painter.setPen(QPen(BLACK_COLOR, 6));
     painter.setBrush(Qt::NoBrush);
-    int xpos = pos*(barWidth_ + barHorizontalSpacing_) + barLeftMargin_;
-    int ypos2 = 0;  // TODO: fix this
-    int ypos = barTopOffset_ + ypos2;
+    // xpos = left edge of rectangle
+    int xpos = calculateBarXmin(pos);
+    int ypos = barTopOffset_;
     path.setFillRule( Qt::WindingFill );
     path.addRoundedRect( QRect(xpos,ypos,barWidth_,barHeight_),
         20, 20, Qt::RelativeSize );
     painter.drawPath(path);
     drawBarCircles(painter, xpos, ypos, pos );
+    drawGrid(painter, xpos, ypos, barWidth_, barHeight_);
 }
+
+void RenderArea::drawBPMgraph(QPainter &painter)
+{
+
+    if (barCount_ < 1) {
+        return;
+    }
+    BpmGraph graph { *this, painter };
+
+    graph.drawRectangle();
+    graph.drawGraph();
+
+}
+
+void RenderArea::drawGrid(QPainter &painter, int xpos, int ypos, int width, int height )
+{
+    int numCircles = mainWindow_->getTimeSignature().getTop();
+    QColor GRAY_COLOR{50, 50, 50};
+    QPen pen {GRAY_COLOR, 1};
+    pen.setStyle(Qt::DashLine);
+    //pen.setJoinStyle(Qt::DashLine);
+    //pen.setCapStyle(Qt::RoundCap);
+    painter.setPen(pen);
+    int numLines = numCircles*gridResolution_+1;
+    //qInfo() << "num lines = " << numLines;
+    //qInfo() << "width = " << width;
+    double delta = ((double) width) / (numLines-1);
+    for (int i = 0; i < numLines; i++) {
+        int xpos2 = (int) (xpos + delta*i);
+        painter.drawLine(xpos2, ypos, xpos2, ypos+height);
+    }
+}
+
 
 // Draws the circles within a single
 // INPUT:
@@ -82,7 +107,8 @@ void RenderArea::drawBarCircles(QPainter &painter, int xpos, int ypos, int barNu
     int numCircles = mainWindow_->getTimeSignature().getTop();
 
     // horizontal margin for circles within the bar
-    int pos0 = (int) (barWidth_ * BAR_CIRCLE_MARGIN);
+    int delta = (int) (barWidth_ / numCircles);
+    int pos0 = delta/2;
 
     int pos = xpos + pos0;
     //qInfo() << "BAR_CIRCLE_MARGIN = " <<BAR_CIRCLE_MARGIN;
@@ -90,7 +116,6 @@ void RenderArea::drawBarCircles(QPainter &painter, int xpos, int ypos, int barNu
     //qInfo() << "pos = " << pos;
     //qInfo() << "xpos = " << xpos;
     //qInfo() << "barWidth_ = " << barWidth_;
-    int delta = (int) ((barWidth_ - (pos0 *2)) / (numCircles-1));
     //qInfo() << "delta = " << delta;
     for (int i = 1; i <= numCircles; i++) {
         drawSingleBarCircleWithAnimation(painter, pos, ypos, radius, barNum, i);
@@ -114,9 +139,28 @@ void RenderArea::drawSingleBarCircleWithAnimation(
 
 }
 
-void RenderArea::addBar()
+QSize RenderArea::minimumSizeHint() const
 {
-    barCount_ += 1;
+    return QSize(100, 100);
+}
+
+void RenderArea::mousePressEvent(QMouseEvent *event)
+{
+    if (event->button() == Qt::LeftButton) {
+        QPoint lastPoint = event->pos();
+        int x = lastPoint.x();
+        int y = lastPoint.y();
+        if (checkBarMouseY(y)) {
+            int barNo = 0;
+            int gridPos = 0;
+            calculateMouseBarPos(x, &barNo, &gridPos);
+            if (barNo > 0) {
+                qInfo() << "barNo = " << barNo;
+                qInfo() << "gridPos = " << gridPos;
+                mainWindow_->openBpmDialog(barNo, gridPos);
+            }
+        }
+    }
 }
 
 void RenderArea::paintEvent(QPaintEvent *event)
@@ -129,6 +173,7 @@ void RenderArea::paintEvent(QPaintEvent *event)
             drawBar(painter, path, i);
         }
     }
+    drawBPMgraph(painter);
     /*
     if (playing_) {
         QColor RED_COLOR{255, 0, 0};
@@ -139,4 +184,39 @@ void RenderArea::paintEvent(QPaintEvent *event)
         painter.drawLine(metroPos_, 10, metroPos_, 70);
         }*/
 
+}
+
+RenderArea::RenderArea(MainWindow *mainWindow)
+    : QWidget(mainWindow),
+      mainWindow_(mainWindow),
+      playing_{false},
+      metroPos_{0},
+      barLeftMargin_{10},
+      barWidth_{160},
+      barHorizontalSpacing_{0},
+      barCount_{0},
+      barTopOffset_{10},
+      barHeight_{100},
+      gridResolution_{2},
+      topBPMgraphMargin_{40},
+      bpmGraphHeight_{200}
+{
+
+}
+
+
+void RenderArea::setPlaying(bool value)
+{
+    playing_ = value;
+}
+
+QSize RenderArea::sizeHint() const
+{
+    return QSize(400, 200);
+}
+
+// horizontal position of current beat circle
+void RenderArea::updateMetroPos()
+{
+    metroPos_ += 1;
 }
