@@ -2,18 +2,21 @@
 #include "WindowSetBPM.hpp"
 #include <QString>
 
-WindowSetBPM::WindowSetBPM(MainWindow *main_window, int barPos, int gridPos) :
+WindowSetBPM::WindowSetBPM(
+    MainWindow *main_window, int barPos, int gridPos, int lastBpm
+) :
     mainWindow_(main_window), barPos_(barPos), gridPos_(gridPos)
 {
     QWidget *widget = new QWidget(this);
     setCentralWidget(widget);
     QGridLayout *layout = new QGridLayout(widget);
     slider_ = new QSlider(Qt::Horizontal, this);
-    slider_->setMinimum(0);
-    slider_->setMaximum(220);
-    slider_->setValue(60);
+    slider_->setMinimum(this->mainWindow_->renderArea()->bpmMin());
+    slider_->setMaximum(this->mainWindow_->renderArea()->bpmMax());
+    slider_->setValue(lastBpm);
     layout->addWidget(slider_, 0, 0, 1, 2, Qt::AlignVCenter);
-    label_ = new QLabel("60", this);
+    std::string str = std::to_string(lastBpm);
+    label_ = new QLabel(str.c_str(), this);
     layout->addWidget(label_, 1, 0, 1, 2, Qt::AlignHCenter | Qt::AlignTop);
     ok_button_ = new QPushButton(tr("Ok"), this);
     layout->addWidget(ok_button_, 2, 0, 1, 1);
@@ -23,7 +26,7 @@ WindowSetBPM::WindowSetBPM(MainWindow *main_window, int barPos, int gridPos) :
     setWindowModality(Qt::ApplicationModal);
     createActions();
 }
-    
+
 void WindowSetBPM::Execute()
 {
     show();
@@ -47,8 +50,7 @@ void WindowSetBPM::updateBPM(int value) {
     QString txt = QString::number(value);
     label_->setText(txt);
     mainWindow_->updateBpm(value, gridPos_, barPos_);
-    // CONTINUE HERE!!
-
+    this->mainWindow_->setBpmDialogLastBpm(value);
 };
 
 void WindowSetBPM::cancel() {
@@ -58,5 +60,3 @@ void WindowSetBPM::cancel() {
 void WindowSetBPM::ok() {
     close();
 };
-
-

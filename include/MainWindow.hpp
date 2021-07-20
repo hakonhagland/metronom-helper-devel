@@ -10,6 +10,7 @@
 #include <QMessageBox>
 #include <QPixmap>
 #include <QPushButton>
+#include <QScrollBar>
 #include <QSoundEffect>
 #include <QStatusBar>
 #include <QString>
@@ -17,12 +18,16 @@
 #include <QVBoxLayout>
 #include <QWidget>
 
+#include "BpmCalculator.hpp"
 #include "RenderArea.hpp"
 #include "BeatCircleTimer.hpp"
 #include "WindowSetTimeSig.hpp"
 #include "WindowSetVolume.hpp"
 #include "WindowSetBPM.hpp"
 
+#include <memory>
+
+class BpmCalculator;
 class RenderArea;
 class BeatCircleTimer;
 
@@ -43,22 +48,28 @@ public:
     MainWindow();
     ~MainWindow(){}
     //
-    void Execute();
     double convertBpmToMilliSec_(int bpm);
     RenderArea *createRenderArea();
+    void Execute();
+    int getCurrentBpm() { return currentBpm_; }
     RenderArea *getRenderArea() {return renderArea_; }
+    QScrollBar *getScrollBar() { return this->scrollBar_; }
     QTimer *getTimer();
     BeatCircleTimer *getBeatCircleTimer() { return beatCircleTimer_; };
     TimeSignature& getTimeSignature() { return timeSignature_; };
-    void setFloatVolume(float v);
-    void setTimeSignature(int top, int bottom);
-    void updateBpm(int bpm, int gridPos, int barPos);
     void openBpmDialog(int barPos, int gridPos);
+    void setBpmDialogLastBpm(int bpm) { this->setBpmDialogLastBpm_ = bpm; }
+    void setFloatVolume(float v);
+    void setScrollBar(QScrollBar *scrollBar) { this->scrollBar_ = scrollBar; }
+    void setTimeSignature(int top, int bottom);
+    RenderArea *renderArea() { return renderArea_; }
+    void updateBpm(int bpm, int gridPos, int barPos);
 private:
     void createActions();
     void createMenus();
     void createTimer();
     void createBeatCircleTimer();
+    void playSoundAndAnimate();
     void positionWindow_(QMainWindow *dialog, int dw, int dh);
     RenderArea *renderArea_;
     QMenu *fileMenu;
@@ -82,6 +93,9 @@ private:
     QSoundEffect *effect_;
     TimeSignature timeSignature_;
     int currentBpm_;
+    int setBpmDialogLastBpm_;
+    std::unique_ptr<BpmCalculator> bpmCalculator_;
+    QScrollBar *scrollBar_;
 
 private slots:
     void save();
@@ -94,6 +108,7 @@ private slots:
     void timerEvent();
     void setBPM();
     void beatCircleTimerEvent();
+    void sliderChanged(int);
 };
 
 #endif

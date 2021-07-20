@@ -2,8 +2,10 @@
 #include <QGridLayout>
 #include <QGuiApplication>
 #include <QScreen>
+#include <QScrollBar>
 #include <QString>
 #include <QWidget>
+#include "../include/BpmGraphWidget.hpp"
 #include "../include/MainWindow.hpp"
 #include "../include/RenderArea.hpp"
 
@@ -17,8 +19,11 @@ int main(int argc, char *argv[ ])
     window.setCentralWidget(widget);
     widget->setLayout(layout);
     RenderArea *renderArea = window.createRenderArea();
+    BpmGraphWidget *bpmGraph = new BpmGraphWidget(/*parent=*/renderArea, bpmGraphWidth);
+    int height = renderArea->getTotalHeight();
     layout->addWidget(renderArea, 0, 0);
-    window.resize(1200, 900);
+    layout->addWidget(window.getScrollBar(), 1, 0);
+    window.resize(1200, height + 100);
     window.setWindowTitle("Simple example");
     QScreen *screen = QGuiApplication::primaryScreen();
     QRect  screenGeometry = screen->geometry();

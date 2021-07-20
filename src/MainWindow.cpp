@@ -3,6 +3,7 @@
 #include "WindowSetVolume.hpp"
 #include "WindowSetBPM.hpp"
 #include "BeatCircleTimer.hpp"
+#include "BpmCalculator.hpp"
 #include <QPushButton>
 
 MainWindow::MainWindow() : timeSignature_{3,4} {
@@ -14,6 +15,15 @@ MainWindow::MainWindow() : timeSignature_{3,4} {
     createBeatCircleTimer();
     floatVolume_ = 1.0f;
     currentBpm_ = 60;
+    setBpmDialogLastBpm_ = currentBpm_;
+    bpmCalculator_ = std::make_unique<BpmCalculator>(this);
+    scrollBar_ = new QScrollBar(Qt::Horizontal);
+    setScrollBar(scrollBar_);
+    connect(scrollBar_,SIGNAL(valueChanged(int)), this, SLOT(sliderChanged(int)));
+}
+
+void MainWindow::sliderChanged(int value) {
+    qInfo() << "slider change: " << value;
 }
 
 void MainWindow::createTimer()
@@ -93,11 +103,12 @@ void MainWindow::save() {
     QApplication::quit();
 }
 
-void MainWindow::updateBpm(int bpm, int gridPos, int barPos)
+void MainWindow::updateBpm(
+       int bpm, [[maybe_unused]] int gridPos, [[maybe_unused]] int barPos)
 {
     double delay = convertBpmToMilliSec_(bpm);
     currentBpm_ = bpm;
-    
+
     getTimer()->setInterval((int) delay);
 }
 
@@ -108,12 +119,8 @@ double MainWindow::convertBpmToMilliSec_(int bpm)
 
 void MainWindow::play() {
     renderArea_->setPlaying(true);
-    double delay = convertBpmToMilliSec_(currentBpm_);
-    timer_->start(delay);
-    // msec
-    //timer->setSingleShot(true);
-    //timer->start(3000);
-    update();
+    timer_->setSingleShot(true);
+    this->playSoundAndAnimate();
 }
 
 void MainWindow::beatCircleTimerEvent()
@@ -121,16 +128,38 @@ void MainWindow::beatCircleTimerEvent()
     beatCircleTimer_->timerEvent();
 }
 
-void MainWindow::timerEvent()
+void MainWindow::playSoundAndAnimate()
 {
+    int beatsPerBar = this->getTimeSignature().getTop();
+    int max = renderArea_->getBarCount() * beatsPerBar;
+    int metroPos = renderArea_->getMetroPos();
+    if (metroPos >= max) {
+        return;
+    }
     effect_ = new QSoundEffect(this);
     effect_->setSource(QUrl::fromLocalFile("../res/metro4_amp.wav"));
     effect_->setLoopCount(1);
     effect_->setVolume(floatVolume_);
-    beatCircleTimer_->startTimer();
     effect_->play();
+    beatCircleTimer_->startTimer();
+    double delay;
+    if (metroPos < (max - 1)) {
+        double bpm1 = bpmCalculator_->calculate(metroPos);
+        double bpm2 = bpmCalculator_->calculate(metroPos+1);
+        delay = 120 / (bpm1 + bpm2);
+    }
+    else {
+        double bpm = bpmCalculator_->calculateLastPoint();
+        delay = 60 / bpm;
+    }
     renderArea_->updateMetroPos();
+    timer_->start(delay * 1000);
     update();
+}
+
+void MainWindow::timerEvent()
+{
+    this->playSoundAndAnimate();
 }
 
 void MainWindow::createBeatCircleTimer()
@@ -174,7 +203,7 @@ void MainWindow::setVolume()
 }
 
 void MainWindow::openBpmDialog(int barPos, int gridPos) {
-    bpmDialog_ = new WindowSetBPM {this, barPos, gridPos};
+    bpmDialog_ = new WindowSetBPM {this, barPos, gridPos, this->setBpmDialogLastBpm_};
     positionWindow_(bpmDialog_, 400, 200);
     bpmDialog_->setWindowTitle("Select a value for BPM");
     bpmDialog_->Execute();

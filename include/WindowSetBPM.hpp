@@ -20,7 +20,7 @@ class WindowSetBPM: public QMainWindow
 
 public:
     ~WindowSetBPM(){}
-    WindowSetBPM(MainWindow *main_window, int barPos, int gridPos);
+    WindowSetBPM(MainWindow *main_window, int barPos, int gridPos, int lastBpm);
 
     void Execute();
 private:
