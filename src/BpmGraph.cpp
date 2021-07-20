@@ -53,7 +53,7 @@ int RenderArea::BpmGraph::getScrolledX(GraphPoint &p)
 void RenderArea::BpmGraph::drawRectangle()
 {
     int height = renderArea_.bpmGraphHeight_;
-    int width = renderArea_.barCount_ * renderArea_.barWidth_;
+    int width = renderArea_.barCount_ * renderArea_.barWidth_ + 2*renderArea_.barBpmGraphXOffset_;
     int ybottom = this->ytop_ + height;
     int xmax = this->xmin_ + width;
     QColor AXES_COLOR{0, 0, 200};

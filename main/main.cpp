@@ -19,7 +19,7 @@ int main(int argc, char *argv[ ])
     window.setCentralWidget(widget);
     widget->setLayout(layout);
     RenderArea *renderArea = window.createRenderArea();
-    BpmGraphWidget *bpmGraph = new BpmGraphWidget(/*parent=*/renderArea, bpmGraphWidth);
+    BpmGraphWidget *bpmGraph = new BpmGraphWidget(/*parent=*/renderArea, /*width=*/200);
     int height = renderArea->getTotalHeight();
     layout->addWidget(renderArea, 0, 0);
     layout->addWidget(window.getScrollBar(), 1, 0);

@@ -8,7 +8,7 @@ BpmGraphWidget::BpmGraphWidget(QWidget *parent, int width) : QWidget(parent) {
     widgetWidth_ = width;
 }
 
-void TestWidget::paintEvent(QPaintEvent *event)
+void BpmGraphWidget::paintEvent(QPaintEvent *event)
 {
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing);

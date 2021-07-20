@@ -139,6 +139,7 @@ private:
     bool playing_;
     int metroPos_;
     int barLeftMargin_;
+    int barBpmGraphXOffset_;
     int barWidth_;
     int barHorizontalSpacing_;
     int barCount_;

@@ -18,8 +18,8 @@ void RenderArea::addBar()
         double bpm_ypos = convertBpmToPixel(bpm);
         int y = y1 + bpm_ypos;
         double pos0 = getBarCircleBarLeftMargin();
-        bpmGraphPoints_.addPoint(barLeftMargin_+pos0, y, bpm);
-        bpmGraphPoints_.addPoint(barLeftMargin_+width-pos0, y, bpm);
+        bpmGraphPoints_.addPoint(barLeftMargin_ + barBpmGraphXOffset_+pos0, y, bpm);
+        bpmGraphPoints_.addPoint(barLeftMargin_ + barBpmGraphXOffset_+width-pos0, y, bpm);
     }
     else {
         fixLastBpmGraphPoint();
@@ -37,7 +37,7 @@ RenderArea::GraphPoint RenderArea::addNewBpmGraphPoint(
 
 int RenderArea::calculateBarXmin(int pos)
 {
-    return pos*(barWidth_ + barHorizontalSpacing_) + barLeftMargin_;
+    return pos*(barWidth_ + barHorizontalSpacing_) + barLeftMargin_ + barBpmGraphXOffset_;
 }
 
 void RenderArea::calculateMouseBarPos(int x, int *barNo, int *gridPos) {
@@ -70,9 +70,9 @@ bool RenderArea::checkBpmGraphMouseInside(int x, int y) {
     int y1 = barTopOffset_ + barHeight_ + topBPMgraphMargin_;
     int y2 = y1 + bpmGraphHeight_;
     double pos0 = getBarCircleBarLeftMargin();
-    double x1 = barLeftMargin_ + pos0;
+    double x1 = barLeftMargin_ + barBpmGraphXOffset_ + pos0;
     int width = barCount_ * barWidth_;
-    double x2 = barLeftMargin_ + width - pos0;
+    double x2 = barLeftMargin_ + barBpmGraphXOffset_ + width - pos0;
     return x >= x1 && x <= x2 && y >= y1 && y <= y2;
 }
 
@@ -227,7 +227,7 @@ void RenderArea::fixLastBpmGraphPoint()
 {
     double pos0 = getBarCircleBarLeftMargin();
     int width = barCount_ * barWidth_;
-    bpmGraphPoints_.updateLastPoint((double) (barLeftMargin_+width-pos0));
+    bpmGraphPoints_.updateLastPoint((double) (barLeftMargin_+barBpmGraphXOffset_+width-pos0));
 }
 
 
@@ -362,6 +362,19 @@ void RenderArea::paintEvent([[maybe_unused]] QPaintEvent *event)
         }
     }
     drawBPMgraph(painter);
+/*
+    int width = barWidth_ * barCount_;
+    double pos0 = getBarCircleBarLeftMargin();
+    int x1 = barLeftMargin_ + barBpmGraphXOffset_ + pos0;
+    int x2 = barLeftMargin_ + barBpmGraphXOffset_ + width - pos0;
+    QColor RED_COLOR{255, 0, 0};
+    QPen pen {RED_COLOR, 3};
+    //pen.setJoinStyle(Qt::RoundJoin);
+    //pen.setCapStyle(Qt::RoundCap);
+    painter.setPen(pen);
+    painter.drawLine(x1, 10, x1, 320);
+    painter.drawLine(x2, 10, x2, 320);
+*/
     /*
     if (playing_) {
         QColor RED_COLOR{255, 0, 0};
@@ -380,6 +393,7 @@ RenderArea::RenderArea(MainWindow *mainWindow)
       playing_{false},
       metroPos_{0},
       barLeftMargin_{28},
+      barBpmGraphXOffset_{15},
       barWidth_{160},
       barHorizontalSpacing_{0},
       barCount_{0},
